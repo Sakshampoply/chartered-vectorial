@@ -110,6 +110,43 @@ async def start_analysis(
         state["portfolio_id"] = str(portfolio_id)
         state["stage"] = AnalysisStage.INFO_COLLECTION  # Move to Stage 2
         
+        # Check if client has pre-extracted info from supplemental docs
+        from app.models.client import Client
+        client_record = db.query(Client).filter(Client.id == client_id).first()
+        if client_record and client_record.extracted_info:
+            ext_info = client_record.extracted_info
+            
+            # Initialize answered_questions
+            if "answered_questions" not in state:
+                state["answered_questions"] = {}
+                
+            # Map LLM extractions to state variables and mark as answered
+            mapping = {
+                "risk_tolerance": ("risk_profile", "risk_tolerance"),
+                "household_income": ("household_income", "household_income"),
+                "cash_on_hand": ("cash_on_hand", "cash_on_hand"),
+                "monthly_investable_income": ("monthly_investable_income", "monthly_investable_income"),
+                "tax_status": ("tax_status", "tax_status"),
+                "investment_horizon_months": ("investment_horizon_months", "investment_horizon"),
+                "liquidity_needs_pct": ("liquidity_needs_pct", "liquidity_needs"),
+                "primary_goal": ("primary_goal", "primary_goal")
+            }
+            
+            skipped = []
+            for ext_key, (state_key, q_key) in mapping.items():
+                if ext_key in ext_info and ext_info[ext_key] is not None:
+                    # Update semantic state variable
+                    state[state_key] = ext_info[ext_key]
+                    # Mark question as answered using its string value
+                    state["answered_questions"][q_key] = str(ext_info[ext_key])
+                    skipped.append(q_key)
+            
+            if skipped:
+                state = AnalysisStateFactory.add_warning(
+                    state, f"Skipped {len(skipped)} questions using data extracted from your supplemental documents."
+                )
+                logger.info(f"Skipped questions based on extracted info: {skipped}")
+
         # Store in memory with UUID (matches database schema)
         ANALYSIS_STORE[analysis_id] = state
         
@@ -1003,7 +1040,7 @@ async def cross_question(
                 
                 # Generate answer using LLM with full context
                 from app.services.llm_wrapper import LLMWrapper
-                llm = LLMWrapper(model_name="gpt-oss-120b")
+                llm = LLMWrapper(model_name="openai/gpt-oss-120b")
                 
                 context_prompt = f"""
 You are an expert investment advisor assistant. Answer the user's question briefly and directly (2-3 sentences max).
@@ -1071,7 +1108,7 @@ Provide a concise, direct answer. Use specific numbers only if highly relevant. 
         
         # Generate answer using LLM with full context
         from app.services.llm_wrapper import LLMWrapper
-        llm = LLMWrapper(model_name="gpt-oss-120b")
+        llm = LLMWrapper(model_name="openai/gpt-oss-120b")
         
         context_prompt = f"""
 You are an expert investment advisor assistant. Answer the user's question briefly and directly (2-3 sentences max).

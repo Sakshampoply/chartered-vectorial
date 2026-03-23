@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -12,10 +15,12 @@ class Settings(BaseSettings):
     max_upload_size_mb: int = int(os.getenv("MAX_UPLOAD_SIZE_MB", "50"))
     upload_folder: str = os.getenv("UPLOAD_FOLDER", "backend/uploads")
     openrouter_api_key: str = os.getenv("OPENROUTER_API_KEY", "")
+    llm_model: str = os.getenv("LLM_MODEL", "openai/gpt-oss-120b")
     
     class Config:
         env_file = ".env"
         case_sensitive = False
+        extra = "allow"
 
 settings = Settings()
 

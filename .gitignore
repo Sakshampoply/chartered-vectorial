@@ -2,15 +2,17 @@
 backend/venv/
 backend/.env
 backend/.env.local
-backend/__pycache__/
-backend/*.pyc
+**/__pycache__/
+**/*.pyc
 backend/.pytest_cache/
 backend/dist/
 backend/build/
 backend/.coverage
 backend/htmlcov/
-backend/uploads/*
+backend/uploads/
+backend/backend/uploads/
 !backend/uploads/.gitkeep
+backend/test_*.py
 
 # Frontend
 frontend/node_modules/

@@ -2,10 +2,14 @@ const API_BASE = "http://localhost:8000/api";
 
 export const analysisApi = {
   // Onboard client with portfolio in one call
-  async onboardClient(clientName: string, file: File) {
+  async onboardClient(clientName: string, file: File, supplementalFiles: File[] = []) {
     const formData = new FormData();
     formData.append("name", clientName);
     formData.append("file", file);
+    
+    supplementalFiles.forEach((file) => {
+      formData.append("supplemental_files", file);
+    });
 
     const res = await fetch(`${API_BASE}/clients/onboarding`, {
       method: "POST",

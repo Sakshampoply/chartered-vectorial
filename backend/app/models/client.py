@@ -19,6 +19,7 @@ class Client(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False)
+    extracted_info = Column(JSON, nullable=True)  # Store ML extracted doc info to skip Q&A
     # REMOVED: age, portfolio_value, risk_tolerance, income_needs, tax_considerations
     # These are now collected in the analysis workflow via AnalysisResult table
     created_at = Column(DateTime, default=datetime.utcnow)

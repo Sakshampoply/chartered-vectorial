@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
 """
 Configuration for LLM and agent systems
 """
@@ -19,7 +22,7 @@ class LLMConfig:
     api_base: str = "https://openrouter.ai/api/v1"
     
     # Model selection
-    model_name: str = "gpt-oss-120b"  # Free, reliable OSS model
+    model_name: str = "openai/gpt-oss-120b"  # Free, reliable OSS model
     backup_model: str = "mistral-7b-instruct"  # Backup if primary fails
     
     # Generation parameters
@@ -28,8 +31,8 @@ class LLMConfig:
     max_tokens: int = 2000
     
     # Timeout and retry settings
-    timeout: int = 60
-    max_retries: int = 3
+    timeout: int = 120
+    max_retries: int = 5
     
     # Agent-specific settings
     document_parsing_temperature: float = 0.3  # Low temp for consistent parsing
@@ -76,7 +79,7 @@ def get_llm_config() -> LLMConfig:
     
     Environment variables:
     - OPENROUTER_API_KEY (required)
-    - LLM_MODEL (optional, default: gpt-oss-120b)
+    - LLM_MODEL (optional, default: openai/gpt-oss-120b)
     - LLM_TEMPERATURE (optional, default: 0.7)
     - LLM_MAX_TOKENS (optional, default: 2000)
     - DEBUG_MODE (optional, default: False)
@@ -93,7 +96,7 @@ def get_llm_config() -> LLMConfig:
     
     config = LLMConfig(
         api_key=api_key,
-        model_name=os.getenv("LLM_MODEL", "gpt-oss-120b"),
+        model_name=os.getenv("LLM_MODEL", "openai/gpt-oss-120b"),
         temperature=float(os.getenv("LLM_TEMPERATURE", "0.7")),
         max_tokens=int(os.getenv("LLM_MAX_TOKENS", "2000")),
         debug_mode=os.getenv("DEBUG_MODE", "false").lower() == "true",

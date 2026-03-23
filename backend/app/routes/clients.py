@@ -5,7 +5,7 @@ Endpoints:
 POST   /api/clients/onboarding      - Unified onboarding (create client + upload portfolio)
 """
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Body
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Body, Form
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from uuid import uuid4, UUID
@@ -24,8 +24,9 @@ router = APIRouter(prefix="/api/clients", tags=["clients"])
 
 @router.post("/onboarding")
 async def onboarding(
-    name: str = Body(..., embed=True),
+    name: str = Form(...),
     file: UploadFile = File(...),
+    supplemental_files: Optional[List[UploadFile]] = File(None),
     db: Session = Depends(get_db)
 ) -> Dict[str, Any]:
     """
@@ -136,6 +137,40 @@ async def onboarding(
             file_type=file.filename.split('.')[-1].lower()
         )
         db.add(uploaded_file)
+        
+        # Handle supplemental files
+        extracted_info = {}
+        if supplemental_files:
+            supp_paths = []
+            for i, supp_file in enumerate(supplemental_files):
+                if supp_file.filename:
+                    # Save supplemental file
+                    supp_path = os.path.join(settings.upload_folder, f"{client_id}_supp_{i}_{supp_file.filename}")
+                    supp_contents = await supp_file.read()
+                    if not supp_contents:
+                        continue
+                    with open(supp_path, "wb") as sf:
+                        sf.write(supp_contents)
+                    supp_paths.append(supp_path)
+                    
+                    # Create DB record for supplemental file
+                    supp_record = UploadedFile(
+                        client_id=client_id,
+                        filename=supp_file.filename,
+                        file_path=supp_path,
+                        file_type=supp_file.filename.split('.')[-1].lower()
+                    )
+                    db.add(supp_record)
+            
+            # Extract info from supplemental documents
+            if supp_paths:
+                from app.agents.document_intelligence import DocumentIntelligenceAgent
+                agent = DocumentIntelligenceAgent()
+                extracted_info = await agent.extract_client_info(supp_paths)
+                if extracted_info:
+                    client.extracted_info = extracted_info
+                    db.add(client)
+
         db.commit()
         
         logger.info(f"[Onboarding] Complete: client={client_id}, portfolio={portfolio_id}")

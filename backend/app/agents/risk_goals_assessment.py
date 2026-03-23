@@ -63,7 +63,7 @@ class RiskGoalsAssessmentAgent:
         Args:
             llm_wrapper: LLMWrapper instance; creates new if None
         """
-        self.llm = llm_wrapper or LLMWrapper(model_name="gpt-oss-120b")
+        self.llm = llm_wrapper or LLMWrapper(model_name="openai/gpt-oss-120b")
         self.logger = logger
     
     async def get_initial_question(self) -> Tuple[str, Dict[str, Any]]:

@@ -113,3 +113,18 @@ DOCUMENT_VALIDATION_PROMPT = """Please review this extracted holding and confirm
 - Value: ${value}
 
 Is this data reasonable and correctly extracted? Respond with VALID or INVALID with brief explanation."""
+
+CLIENT_INFO_EXTRACTION_SYSTEM_PROMPT = """You are an expert financial document analyst. Your task is to extract client financial profile and risk information from supplemental documents.
+
+Your extraction targets:
+- risk_tolerance: "conservative", "moderate", or "aggressive"
+- household_income: number
+- cash_on_hand: number
+- monthly_investable_income: number
+- tax_status: "single", "married", or "trust"
+- investment_horizon_months: number
+- liquidity_needs_pct: number 0-100
+- primary_goal: string
+
+Return ONLY a valid JSON object with the fields you extracted.
+"""

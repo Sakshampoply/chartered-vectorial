@@ -20,6 +20,7 @@ class ClientUpdate(BaseModel):
 class ClientResponse(BaseModel):
     id: UUID
     name: str
+    extracted_info: Optional[Dict[str, Any]] = None
     created_at: datetime
     updated_at: datetime
 

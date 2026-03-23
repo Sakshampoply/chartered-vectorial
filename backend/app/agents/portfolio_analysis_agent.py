@@ -38,7 +38,7 @@ class PortfolioAnalysisAgent:
             llm_wrapper: LLMWrapper for LLM-based summaries
             db: Database session for loading portfolio
         """
-        self.llm = llm_wrapper or LLMWrapper(model_name="gpt-oss-120b")
+        self.llm = llm_wrapper or LLMWrapper(model_name="openai/gpt-oss-120b")
         self.db = db
         self.logger = logger
     

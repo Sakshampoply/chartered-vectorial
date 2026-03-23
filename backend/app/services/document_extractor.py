@@ -38,7 +38,7 @@ class DocumentExtractor:
             llm_wrapper: LLMWrapper instance for fallback extraction
                         Creates new instance if None
         """
-        self.llm = llm_wrapper or LLMWrapper(model_name="gpt-oss-120b")
+        self.llm = llm_wrapper or LLMWrapper(model_name="openai/gpt-oss-120b")
         self.extraction_method = None
         self.confidence = 0.0
     

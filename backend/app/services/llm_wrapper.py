@@ -9,6 +9,9 @@ Handles:
 """
 
 from __future__ import annotations
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
 import logging
 import asyncio
 import json
@@ -96,7 +99,7 @@ class LLMClient:
         # Retry logic
         for attempt in range(self.config.max_retries):
             try:
-                response = await self.client.post("/chat/completions", json=payload)
+                print("PAYLOAD:", payload); response = await self.client.post("/chat/completions", json=payload)
                 response.raise_for_status()
                 
                 data = response.json()
@@ -110,10 +113,19 @@ class LLMClient:
                 )
             
             except httpx.HTTPStatusError as e:
-                logger.error(f"HTTP Error (attempt {attempt + 1}/{self.config.max_retries}): {e}")
+                # Log the full response payload so we can see provider errors (e.g., 402 reasons)
+                body = None
+                try:
+                    body = e.response.text
+                except Exception:
+                    body = "<unavailable>"
+                logger.error(
+                    f"HTTP Error (attempt {attempt + 1}/{self.config.max_retries}) "
+                    f"status={e.response.status_code} body={body}"
+                )
                 
                 if e.response.status_code == 429:  # Rate limited
-                    wait_time = 2 ** attempt  # Exponential backoff
+                    wait_time = 4 ** attempt  # Aggressive Exponential backoff (1s, 4s, 16s, 64s...)
                     logger.warning(f"Rate limited. Waiting {wait_time}s before retry...")
                     await asyncio.sleep(wait_time)
                     continue

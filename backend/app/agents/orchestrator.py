@@ -52,7 +52,7 @@ class AnalysisOrchestrator:
         from app.services.llm_wrapper import LLMWrapper
         
         self.services = services
-        self.llm = llm_wrapper or LLMWrapper(model_name="gpt-oss-120b")
+        self.llm = llm_wrapper or LLMWrapper(model_name="openai/gpt-oss-120b")
         self.tool_executor = ToolExecutor(services)
         self.document_agent = DocumentIntelligenceAgent(llm_wrapper=self.llm)
         self.graph = self._build_graph()

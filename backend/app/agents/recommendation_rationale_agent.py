@@ -26,7 +26,7 @@ class RecommendationRationaleAgent:
     
     def __init__(self, llm_wrapper: Optional[LLMWrapper] = None):
         """Initialize agent"""
-        self.llm = llm_wrapper or LLMWrapper(model_name="gpt-oss-120b")
+        self.llm = llm_wrapper or LLMWrapper(model_name="openai/gpt-oss-120b")
         self.logger = logger
     
     async def generate_rationale(self, state: AnalysisState) -> Dict[str, Any]:

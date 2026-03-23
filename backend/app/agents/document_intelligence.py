@@ -1,3 +1,5 @@
+import json
+
 """
 Document Intelligence Agent
 
@@ -37,7 +39,7 @@ class DocumentIntelligenceAgent:
         # Lazy import to avoid circular dependency
         from app.services.document_extractor import DocumentExtractor
         
-        self.llm = llm_wrapper or LLMWrapper(model_name="gpt-oss-120b")
+        self.llm = llm_wrapper or LLMWrapper(model_name="openai/gpt-oss-120b")
         self.extractor = DocumentExtractor(llm_wrapper=self.llm)
     
     async def process_documents(self, state: AnalysisState) -> AnalysisState:
@@ -177,6 +179,60 @@ class DocumentIntelligenceAgent:
         
         return state
     
+    async def extract_client_info(self, file_paths: List[str]) -> Dict[str, Any]:
+        """
+        Extract client info from supplemental documents to skip Q&A.
+        """
+        if not file_paths:
+            return {}
+            
+        combined_text = ""
+        for file_path in file_paths:
+            try:
+                if file_path.lower().endswith('.pdf'):
+                    import pdfplumber
+                    with pdfplumber.open(file_path) as pdf:
+                        for page in pdf.pages:
+                            text = page.extract_text()
+                            if text:
+                                combined_text += text + "\n"
+                else:
+                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        combined_text += f.read() + "\n"
+            except Exception as e:
+                logger.warning(f"Failed to read {file_path} for client info: {e}")
+                
+        if not combined_text.strip():
+            return {}
+            
+        # Call LLM
+        from app.agents.prompts.document_intelligence import CLIENT_INFO_EXTRACTION_SYSTEM_PROMPT
+        
+        try:
+            # Truncate to rough token limit if needed
+            text_to_process = combined_text[:30000]
+            
+            response = await self.llm.generate(
+                prompt=f"Extract client info from the following document text:\n\n{text_to_process}\n\nONLY return a JSON object.",
+                system_prompt=CLIENT_INFO_EXTRACTION_SYSTEM_PROMPT,
+                temperature=0.1
+            )
+            
+            # Parse JSON
+            text = response
+            if "```json" in text:
+                text = text.split("```json")[1].split("```")[0]
+            elif "```" in text:
+                text = text.split("```")[1].split("```")[0]
+                
+            extracted = json.loads(text.strip())
+            logger.info(f"Successfully extracted client info: {extracted}")
+            return extracted
+            
+        except Exception as e:
+            logger.error(f"Error during client info extraction: {e}")
+            return {}
+
     async def validate_extracted_holdings(
         self,
         holdings: List[Dict[str, Any]]

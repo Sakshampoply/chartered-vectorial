@@ -20,6 +20,7 @@ export const InputForm: React.FC = () => {
 
   const [clientName, setClientName] = useState("");
   const [portfolioFile, setPortfolioFile] = useState<File | null>(null);
+  const [supplementalFiles, setSupplementalFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -30,6 +31,17 @@ export const InputForm: React.FC = () => {
       setPortfolioFile(file);
       setError(null);
     }
+  };
+
+  const handleSupplementalFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      const filesArray = Array.from(event.target.files);
+      setSupplementalFiles((prev) => [...prev, ...filesArray]);
+    }
+  };
+
+  const removeSupplementalFile = (indexToRemove: number) => {
+    setSupplementalFiles(files => files.filter((_, index) => index !== indexToRemove));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,7 +61,7 @@ export const InputForm: React.FC = () => {
       setUploadProgress(33);
 
       // Onboard client with portfolio
-      const onboardRes = await analysisApi.onboardClient(clientName, portfolioFile);
+      const onboardRes = await analysisApi.onboardClient(clientName, portfolioFile, supplementalFiles);
       
       setUploadProgress(66);
 
@@ -59,6 +71,7 @@ export const InputForm: React.FC = () => {
       setUploadProgress(100);
       setClientName("");
       setPortfolioFile(null);
+      setSupplementalFiles([]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
       setUploadProgress(0);
@@ -207,13 +220,92 @@ export const InputForm: React.FC = () => {
               </Typography>
             </Paper>
 
+            {/* Supplemental Files (Optional) */}
+            <Typography
+              variant="subtitle2"
+              sx={{ fontWeight: 600, mb: 1, color: "textPrimary" }}
+            >
+              Supplemental Documents (Optional)
+            </Typography>
+            <Paper
+              variant="outlined"
+              sx={{
+                p: 2.5,
+                textAlign: "center",
+                border: "2px dashed",
+                borderColor: supplementalFiles.length > 0 ? "primary.main" : "divider",
+                borderRadius: 2,
+                backgroundColor: supplementalFiles.length > 0 ? "primary.light" : "background.default",
+                cursor: "pointer",
+                transition: "all 0.3s ease",
+                mb: 3,
+                minHeight: 140,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                "&:hover": {
+                  borderColor: "primary.main",
+                  backgroundColor: "rgba(102, 126, 234, 0.04)",
+                },
+              }}
+              component="label"
+            >
+              <input
+                hidden
+                type="file"
+                multiple
+                accept=".csv,.xlsx,.xls,.pdf,.txt"
+                onChange={handleSupplementalFileChange}
+                disabled={loading}
+              />
+              <CloudUploadIcon
+                sx={{
+                  fontSize: 40,
+                  color: supplementalFiles.length > 0 ? "primary.main" : "textSecondary",
+                  mb: 1,
+                }}
+              />
+              <Typography
+                variant="body2"
+                sx={{
+                  color: supplementalFiles.length > 0 ? "primary.main" : "textSecondary",
+                  fontWeight: 500,
+                }}
+              >
+                {supplementalFiles.length > 0
+                  ? `✓ ${supplementalFiles.length} file(s) selected`
+                  : "Upload bank statements, tax docs, or advisory notes"}
+              </Typography>
+              <Typography variant="caption" color="textSecondary" sx={{ display: "block", mt: 1 }}>
+                Our AI will extract risk tolerance, income, horizon, tax info, etc.
+              </Typography>
+            </Paper>
+            
+            {supplementalFiles.length > 0 && (
+              <Box sx={{ mb: 3 }}>
+                {supplementalFiles.map((f, i) => (
+                  <Typography key={i} variant="caption" display="block" sx={{ ml: 1, color: 'text.secondary' }}>
+                    • {f.name}
+                  </Typography>
+                ))}
+              </Box>
+            )}
             {/* Progress Bar */}
             {uploadProgress > 0 && uploadProgress < 100 && (
               <Box sx={{ mb: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2" color="textSecondary">
+                    Processing documents...
+                  </Typography>
+                  <Typography variant="body2" color="primary" fontWeight="bold">
+                    {uploadProgress}%
+                  </Typography>
+                </Box>
                 <Box
                   sx={{
                     height: 8,
-                    backgroundColor: "background.default",
+                    bgcolor: "rgba(102, 126, 234, 0.1)",
                     borderRadius: 4,
                     overflow: "hidden",
                   }}
