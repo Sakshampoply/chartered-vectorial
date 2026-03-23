@@ -1,0 +1,149 @@
+.app-container {
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.stage-container {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background-color: #1976d2;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #1565c0;
+}
+
+.btn-secondary {
+  background-color: #757575;
+  color: white;
+  margin-left: 10px;
+}
+
+.btn-secondary:hover {
+  background-color: #616161;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 10px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #4caf50;
+  transition: width 0.3s ease;
+}
+
+.message {
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.message.success {
+  background-color: #c8e6c9;
+  color: #2e7d32;
+  border-left: 4px solid #4caf50;
+}
+
+.message.error {
+  background-color: #ffcdd2;
+  color: #c62828;
+  border-left: 4px solid #f44336;
+}
+
+.message.info {
+  background-color: #bbdefb;
+  color: #1565c0;
+  border-left: 4px solid #2196f3;
+}
+
+.score-card {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+.score-card.green {
+  background-color: #c8e6c9;
+  border-left: 4px solid #4caf50;
+}
+
+.score-card.amber {
+  background-color: #ffe0b2;
+  border-left: 4px solid #ff9800;
+}
+
+.score-card.red {
+  background-color: #ffcdd2;
+  border-left: 4px solid #f44336;
+}
+
+.score-number {
+  font-size: 32px;
+  font-weight: bold;
+  margin-right: 20px;
+  min-width: 50px;
+}
+
+.score-details {
+  flex-grow: 1;
+}
+
+.score-label {
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.score-description {
+  font-size: 14px;
+  opacity: 0.8;
+}
