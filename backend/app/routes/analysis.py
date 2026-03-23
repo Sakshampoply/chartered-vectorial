@@ -977,19 +977,90 @@ async def cross_question(
             if not analysis_record:
                 raise HTTPException(status_code=404, detail=f"Analysis {analysis_id} not found")
             
-            # For database records, return a simple response (ideally would re-run copilot agent)
             question = request_data.get("question", "").strip()
             if not question:
                 raise HTTPException(status_code=400, detail="question required")
             
-            return {
-                "analysis_id": analysis_id,
-                "question": question,
-                "answer": "This analysis was completed previously and stored in the database. "
-                          "For real-time cross-questioning, please run a new analysis from the frontend. "
-                          "The stored results are available via the /results endpoint.",
-                "source": "database"
-            }
+            # Handle database records: reconstruct state from stored JSON fields
+            try:
+                # Extract all stored metrics
+                portfolio_metrics = analysis_record.portfolio_metrics_json or {}
+                risk_metrics = analysis_record.risk_metrics_json or {}
+                recommendation = analysis_record.recommendation_json or {}
+                
+                # Build context for LLM (same structure as in-memory path)
+                context = {
+                    "current_allocation": portfolio_metrics.get("allocation", {}),
+                    "recommended_allocation": recommendation.get("recommended_allocation", {}),
+                    "risk_profile": analysis_record.risk_profile,
+                    "risk_metrics": {
+                        "sharpe_ratio": risk_metrics.get("sharpe_ratio"),
+                        "volatility": risk_metrics.get("volatility"),
+                        "beta": risk_metrics.get("beta")
+                    },
+                    "recommended_trades": recommendation.get("rebalancing_trades", [])
+                }
+                
+                # Generate answer using LLM with full context
+                from app.services.llm_wrapper import LLMWrapper
+                llm = LLMWrapper(model_name="gpt-oss-120b")
+                
+                context_prompt = f"""
+You are an expert investment advisor assistant with access to the following analysis results:
+
+Current Portfolio Allocation:
+{portfolio_metrics.get('allocation', {})}
+
+Recommended Allocation:
+{recommendation.get('recommended_allocation', {})}
+
+Risk Profile: {analysis_record.risk_profile or 'moderate'}
+
+Key Metrics:
+- Sharpe Ratio: {risk_metrics.get('sharpe_ratio', 0):.2f}
+- Volatility: {risk_metrics.get('volatility', 0):.2%}
+- Beta: {risk_metrics.get('beta', 1.0):.2f}
+- Max Drawdown: {risk_metrics.get('max_drawdown', 0):.2%}
+- Diversification Score: {portfolio_metrics.get('diversification_score', 0):.2f}/1.0
+
+Recommended Trades:
+{recommendation.get('rebalancing_trades', [])}
+
+Investment Plan Summary:
+{recommendation.get('execution_plan', 'See recommendations above')}
+
+User Question: {question}
+
+Please provide a thoughtful, professional answer to the user's question using the available metrics and context.
+Be specific with numbers and references to their portfolio analysis. If the question involves a hypothetical scenario,
+explain how it would affect their current situation based on the data above.
+"""
+                
+                answer = await llm.generate(
+                    prompt=context_prompt,
+                    use_case="cross_question",
+                    temperature=0.7
+                )
+                
+                return {
+                    "analysis_id": analysis_id,
+                    "question": question,
+                    "answer": answer,
+                    "metrics_referenced": {
+                        "current_allocation": portfolio_metrics.get("allocation", {}),
+                        "recommended_allocation": recommendation.get("recommended_allocation", {}),
+                        "sharpe_ratio": risk_metrics.get("sharpe_ratio"),
+                        "volatility": risk_metrics.get("volatility")
+                    },
+                    "source": "database"
+                }
+            
+            except Exception as e:
+                logger.error(f"Error cross-questioning database analysis {analysis_id}: {str(e)}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Error processing cross-question: {str(e)}"
+                )
         
         # In-memory state
         if state["stage"] != AnalysisStage.ANALYSIS_COMPLETE:

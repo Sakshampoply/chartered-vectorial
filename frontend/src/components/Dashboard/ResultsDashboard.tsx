@@ -23,6 +23,7 @@ import {
 import Tab from "@mui/material/Tab";
 import { useAnalysis } from "../../contexts/AnalysisContext";
 import { AnalysisResults } from "../../types/index";
+import { AnalysisCopilot } from "../AnalysisCopilot/AnalysisCopilot";
 
 export const ResultsDashboard: React.FC = () => {
   const { analysisResults, analysisProgress, analysisId, setCurrentPage } =
@@ -30,6 +31,7 @@ export const ResultsDashboard: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState("overview");
   const [isLoading, setIsLoading] = useState(!analysisResults);
+  const [copilotOpen, setCopilotOpen] = useState(false);
 
   useEffect(() => {
     if (analysisResults) {
@@ -80,7 +82,18 @@ export const ResultsDashboard: React.FC = () => {
         p: 3,
       }}
     >
-      <Box sx={{ maxWidth: 1400, mx: "auto" }}>
+      <Box
+        sx={{
+          maxWidth: copilotOpen ? 1800 : 1400,
+          mx: "auto",
+          display: "grid",
+          gridTemplateColumns: copilotOpen ? "1fr 400px" : "1fr",
+          gap: copilotOpen ? 3 : 0,
+          transition: "all 0.3s ease",
+        }}
+      >
+        {/* Main Content */}
+        <Box>
         {/* Header */}
         <Box sx={{ mb: 4 }}>
           <Box
@@ -89,6 +102,7 @@ export const ResultsDashboard: React.FC = () => {
               justifyContent: "space-between",
               alignItems: "center",
               mb: 2,
+              gap: 2,
             }}
           >
             <Typography
@@ -97,12 +111,25 @@ export const ResultsDashboard: React.FC = () => {
             >
               Investment Analysis Results
             </Typography>
-            <Button
-              variant="outlined"
-              onClick={() => setCurrentPage("input")}
-            >
-              New Analysis
-            </Button>
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <Button
+                variant="outlined"
+                onClick={() => setCopilotOpen(!copilotOpen)}
+                sx={{
+                  borderColor: "#764ba2",
+                  color: "#764ba2",
+                  "&:hover": { borderColor: "#667eea", color: "#667eea" },
+                }}
+              >
+                {copilotOpen ? "Close Copilot" : "Ask Questions"}
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => setCurrentPage("input")}
+              >
+                New Analysis
+              </Button>
+            </Box>
           </Box>
           <Typography variant="body2" color="textSecondary">
             Analysis completed on {new Date(created_at).toLocaleDateString()}{" "}
@@ -593,6 +620,17 @@ export const ResultsDashboard: React.FC = () => {
             )}
           </Box>
         </Card>
+        </Box>
+
+        {/* Copilot Sidebar */}
+        {copilotOpen && analysisId && (
+          <Box sx={{ sticky: "top", top: 20, height: "fit-content" }}>
+            <AnalysisCopilot
+              analysisId={analysisId}
+              onClose={() => setCopilotOpen(false)}
+            />
+          </Box>
+        )}
       </Box>
     </Box>
   );
