@@ -1006,34 +1006,17 @@ async def cross_question(
                 llm = LLMWrapper(model_name="gpt-oss-120b")
                 
                 context_prompt = f"""
-You are an expert investment advisor assistant with access to the following analysis results:
+You are an expert investment advisor assistant. Answer the user's question briefly and directly (2-3 sentences max).
 
-Current Portfolio Allocation:
-{portfolio_metrics.get('allocation', {})}
-
-Recommended Allocation:
-{recommendation.get('recommended_allocation', {})}
-
-Risk Profile: {analysis_record.risk_profile or 'moderate'}
-
-Key Metrics:
-- Sharpe Ratio: {risk_metrics.get('sharpe_ratio', 0):.2f}
-- Volatility: {risk_metrics.get('volatility', 0):.2%}
-- Beta: {risk_metrics.get('beta', 1.0):.2f}
-- Max Drawdown: {risk_metrics.get('max_drawdown', 0):.2%}
-- Diversification Score: {portfolio_metrics.get('diversification_score', 0):.2f}/1.0
-
-Recommended Trades:
-{recommendation.get('rebalancing_trades', [])}
-
-Investment Plan Summary:
-{recommendation.get('execution_plan', 'See recommendations above')}
+Analysis Data:
+- Current Allocation: {portfolio_metrics.get('allocation', {})}
+- Recommended Allocation: {recommendation.get('recommended_allocation', {})}
+- Risk Profile: {analysis_record.risk_profile or 'moderate'}
+- Sharpe Ratio: {risk_metrics.get('sharpe_ratio', 0):.2f} | Volatility: {risk_metrics.get('volatility', 0):.2%} | Beta: {risk_metrics.get('beta', 1.0):.2f}
 
 User Question: {question}
 
-Please provide a thoughtful, professional answer to the user's question using the available metrics and context.
-Be specific with numbers and references to their portfolio analysis. If the question involves a hypothetical scenario,
-explain how it would affect their current situation based on the data above.
+Provide a concise, direct answer. Use specific numbers only if highly relevant. Avoid lengthy explanations.
 """
                 
                 answer = await llm.generate(
@@ -1091,34 +1074,17 @@ explain how it would affect their current situation based on the data above.
         llm = LLMWrapper(model_name="gpt-oss-120b")
         
         context_prompt = f"""
-You are an expert investment advisor assistant with access to the following analysis results:
+You are an expert investment advisor assistant. Answer the user's question briefly and directly (2-3 sentences max).
 
-Current Portfolio Allocation:
-{state.get('allocation', {})}
-
-Recommended Allocation:
-{state.get('recommended_allocation', {})}
-
-Risk Profile: {state.get('risk_profile', 'moderate')}
-
-Key Metrics:
-- Sharpe Ratio: {state.get('sharpe_ratio', 0):.2f}
-- Volatility: {state.get('volatility', 0):.2%}
-- Beta: {state.get('beta', 1.0):.2f}
-- Max Drawdown: {state.get('max_drawdown', 0):.2%}
-- Diversification Score: {state.get('diversification_score', 0):.2f}/1.0
-
-Recommended Trades:
-{state.get('rebalancing_trades', [])}
-
-Investment Plan Summary:
-{state.get('execution_plan', 'See recommendations above')}
+Analysis Data:
+- Current Allocation: {state.get('allocation', {})}
+- Recommended Allocation: {state.get('recommended_allocation', {})}
+- Risk Profile: {state.get('risk_profile', 'moderate')}
+- Sharpe Ratio: {state.get('sharpe_ratio', 0):.2f} | Volatility: {state.get('volatility', 0):.2%} | Beta: {state.get('beta', 1.0):.2f}
 
 User Question: {question}
 
-Please provide a thoughtful, professional answer to the user's question using the available metrics and context.
-Be specific with numbers and references to their portfolio analysis. If the question involves a hypothetical scenario,
-explain how it would affect their current situation based on the data above.
+Provide a concise, direct answer. Use specific numbers only if highly relevant. Avoid lengthy explanations.
 """
         
         answer = await llm.generate(
